@@ -27,6 +27,16 @@
             background-color: rgba(0, 0, 0, 0.5);
             z-index: 999;
         }
+        #answer {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            display: none;
+        }
+        .loading {
+            display: none;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -38,6 +48,8 @@
         <textarea id="question" rows="4" cols="50"></textarea><br>
         <button onclick="submitQuestion()">Отправить</button>
         <button onclick="closeDialog()">Закрыть</button>
+        <div class="loading">Получаем ответ...</div>
+        <div id="answer"></div>
     </div>
 
     <script>
@@ -49,12 +61,34 @@
         function closeDialog() {
             document.getElementById('dialog').style.display = 'none';
             document.getElementById('overlay').style.display = 'none';
+            document.getElementById('answer').style.display = 'none';
         }
 
-        function submitQuestion() {
+        async function submitQuestion() {
             const question = document.getElementById('question').value;
-            alert('Ваш вопрос: ' + question);
-            closeDialog();
+            const answerDiv = document.getElementById('answer');
+            const loading = document.querySelector('.loading');
+            
+            try {
+                loading.style.display = 'block';
+                const response = await fetch('http://localhost:3000/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question })
+                });
+
+                const data = await response.json();
+                
+                answerDiv.style.display = 'block';
+                answerDiv.innerHTML = `<strong>Ответ:</strong><br>${data.answer}`;
+            } catch (error) {
+                answerDiv.style.display = 'block';
+                answerDiv.innerHTML = `<strong>Ошибка:</strong><br>${error.message}`;
+            } finally {
+                loading.style.display = 'none';
+            }
         }
     </script>
 </body>
